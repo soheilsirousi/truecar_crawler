@@ -2,22 +2,38 @@ from bs4 import BeautifulSoup
 import requests
 from database import MongoHandler
 from conf import CARS_URL, BASE_URL
+from producer import ProducerQueue
 
 
 class Crawler:
 
     @classmethod
     def crawl_page(cls, page_number=1):
+        db = MongoHandler()
         context = requests.get(CARS_URL + str(page_number))
         soup = BeautifulSoup(context.text, 'html.parser')
-        cls.db_save(soup.find_all('a', attrs={'data-test': "vehicleCardLink"}))
+        urls = soup.find_all('a', attrs={'data-test': "vehicleCardLink"})
+        for url in urls:
+            if not db.link_exist(BASE_URL + url['href']):
+                cls.call_queue(url['href'])
+
+    @staticmethod
+    def db_save(ch, method, properties, body):
+        db = MongoHandler()
+        db.insert_link(BASE_URL + body.decode())
+        ch.basic_ack(delivery_tag=method.delivery_tag)
 
     @classmethod
-    def db_save(cls, links):
-        db = MongoHandler()
-        for link in links:
-            db.insert_link(BASE_URL + link['href'])
+    def call_queue(cls, url):
+        q = ProducerQueue()
+        q.send_message(url)
+
+    @classmethod
+    def deep_crawler(cls, page_limit=2):
+        for i in range(1, page_limit+1):
+            cls.crawl_page(page_number=i)
 
 
 if __name__ == '__main__':
-    Crawler.crawl_page()
+    Crawler.deep_crawler(page_limit=10)
+

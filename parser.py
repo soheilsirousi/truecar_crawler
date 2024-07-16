@@ -18,7 +18,8 @@ class Parser:
             self.soup = BeautifulSoup(html, 'html.parser')
             data = {'name': self.name, 'year': self.year, 'exterior_color': self.exterior_color,
                     'interior_color': self.interior_color, 'distance_traveled': self.distance_traveled,
-                    'fuel_type': self.fuel_type, 'price': self.price, 'created_time': str(datetime.now())}
+                    'fuel_type': self.fuel_type, 'price': self.price, 'url': dialog['link'],
+                    'created_time': str(datetime.now())}
             db.insert_data(data)
             db.visit_link(dialog['link'])
 

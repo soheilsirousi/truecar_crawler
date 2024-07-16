@@ -4,6 +4,12 @@ from datetime import datetime
 
 class MongoHandler:
 
+    """Singleton Pattern"""
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(MongoHandler, cls).__new__(cls)
+        return cls.instance
+
     def __init__(self):
         self.client = pymongo.MongoClient('localhost', 27017)
         self.db = self.client.get_database('truecar_crawler')
@@ -20,6 +26,9 @@ class MongoHandler:
 
     def insert_data(self, data):
         return self.db.cars_data.insert_one(data)
+
+    def link_exist(self, link):
+        return True if self.collection.find_one({'link': link}) is not None else False
 
 
 if __name__ == '__main__':
