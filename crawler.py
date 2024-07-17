@@ -3,6 +3,8 @@ import requests
 from database import MongoHandler
 from conf import CARS_URL, BASE_URL
 from producer import ProducerQueue
+import threading
+import time
 
 
 class Crawler:
@@ -30,10 +32,15 @@ class Crawler:
 
     @classmethod
     def deep_crawler(cls, page_limit=2):
+        threads = list()
         for i in range(1, page_limit+1):
-            cls.crawl_page(page_number=i)
+            th = threading.Thread(target=cls.crawl_page, args=(i, ))
+            threads.append(th)
+            th.start()
+
+        for thread in threads:
+            thread.join()
 
 
 if __name__ == '__main__':
     Crawler.deep_crawler(page_limit=10)
-
